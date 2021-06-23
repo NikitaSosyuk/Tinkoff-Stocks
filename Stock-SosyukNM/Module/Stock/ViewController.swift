@@ -12,7 +12,7 @@ class ViewController: UIViewController {
     // MARK: - UI
     private let activityIndicator: UIActivityIndicatorView = {
         let indicator = UIActivityIndicatorView()
-        indicator.style = .large
+        indicator.style = .medium
         return indicator
     }()
     
