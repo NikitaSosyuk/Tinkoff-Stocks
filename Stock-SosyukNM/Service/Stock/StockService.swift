@@ -7,19 +7,23 @@
 
 import UIKit
 
-class StockService {
+protocol StockServiceProtocol {
+    var timeoutInterval: TimeInterval { get set }
+    func loadStock(for symbol: String, _ completion: @escaping (Result<Stock, StockServiceError>) -> Void)
+    func loadStockList(_ completion: @escaping (Result<[Company], StockServiceError>) -> Void)
+    func loadImageOfCompany(for symbol: String, _ completion: @escaping (Result<UIImage, StockServiceError>) -> Void)
+}
+
+final class StockService: StockServiceProtocol {
+    var timeoutInterval: TimeInterval = 10
+    
     private let responseQueue: DispatchQueue
-    private let timeoutInterval: TimeInterval = 10
     private let token = "pk_e933760a98264d238ebbab3652a3094e"
     
     init(responseQueue: DispatchQueue) {
         self.responseQueue = responseQueue
     }
-    
-    /// Load Stock by stock symbol (use iexcloud api)
-    /// - Parameters:
-    ///   - symbol: Symbol of stock
-    ///   - completion: Processing the result (list of Company or error) in responseQueue
+
     func loadStock(for symbol: String, _ completion: @escaping (Result<Stock, StockServiceError>) -> Void) {
         guard let url = URL(string: "https://cloud.iexapis.com/stable/stock/\(symbol)/quote?token=\(token)") else { return }
         let urlRequest = makeUrlRequest(url: url)
@@ -48,10 +52,7 @@ class StockService {
         }
         dataTask.resume()
     }
-    
-    /// Load list of Company (mostactive in iexcloud api)
-    /// - Parameters:
-    ///   - completion: Processing the result (list of Company or error) in responseQueue
+
     func loadStockList(_ completion: @escaping (Result<[Company], StockServiceError>) -> Void) {
         guard let url = URL(string: "https://cloud.iexapis.com/stable/stock/market/list/mostactive?token=\(token)") else { return }
         let urlRequest = makeUrlRequest(url: url)
@@ -80,11 +81,7 @@ class StockService {
         }
         dataTask.resume()
     }
-    
-    /// Load image of company
-    /// - Parameters:
-    ///   - symbol: Symbol of stock
-    ///   - completion: Processing the result (image or error) in responseQueue
+
     func loadImageOfCompany(for symbol: String, _ completion: @escaping (Result<UIImage, StockServiceError>) -> Void) {
         guard let url = URL(string: "https://storage.googleapis.com/iexcloud-hl37opg/api/logos/\(symbol).png") else { return }
         let urlRequest = makeUrlRequest(url: url)
@@ -112,8 +109,7 @@ class StockService {
         }
         dataTask.resume()
     }
-    
-    /// Make URLRequest from URL with GET method, content type = text/json, timeout interval
+
     private func makeUrlRequest(url: URL) -> URLRequest {
         var urlRequest = URLRequest(url: url)
         urlRequest.httpMethod = "GET"
@@ -121,5 +117,4 @@ class StockService {
         urlRequest.timeoutInterval = timeoutInterval
         return urlRequest
     }
-
 }
